@@ -41,8 +41,8 @@ void solve_part_two() {
 int main () {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
-  // solve_part_one();
-  solve_part_two();
+  solve_part_one();
+  // solve_part_two();
 }
 
 
