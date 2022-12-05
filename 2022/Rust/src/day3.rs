@@ -27,7 +27,7 @@ fn solve_part_two(data: &str) -> u32 {
 
     vecs.chunks(3)
         .map(|x| -> u32 {
-            let mut acc : u32 = 0;
+            let mut acc: u32 = 0;
             for i in x[0]
                 .iter()
                 .filter(|ch| x[1].contains(ch))
@@ -43,7 +43,6 @@ fn solve_part_two(data: &str) -> u32 {
         })
         .sum()
 }
-
 
 fn main() {
     let data = include_str!("../data/day3.prod");
