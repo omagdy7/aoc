@@ -73,17 +73,25 @@ impl FromStr for Command {
 fn apply_command(stacks: &mut Vec<Stack>, cmd: &Command, part1: bool) {
     if part1 {
         for _ in 0..cmd.num_of_times {
-            let element_to_push = stacks[cmd.from - 1].stack.pop_back().expect("welp the stack is empty");
+            let element_to_push = stacks[cmd.from - 1]
+                .stack
+                .pop_back()
+                .expect("welp the stack is empty");
             stacks[cmd.target - 1].stack.push_back(element_to_push);
         }
     } else {
-        let mut tmp_stack :VecDeque<StackElement> = VecDeque::new();
+        let mut tmp_stack: VecDeque<StackElement> = VecDeque::new();
         for _ in 0..cmd.num_of_times {
-            let element_to_push = stacks[cmd.from - 1].stack.pop_back().expect("welp the stack is empty");
+            let element_to_push = stacks[cmd.from - 1]
+                .stack
+                .pop_back()
+                .expect("welp the stack is empty");
             tmp_stack.push_back(element_to_push);
         }
         for _ in 0..cmd.num_of_times {
-            stacks[cmd.target - 1].stack.push_back(tmp_stack.pop_back().unwrap());
+            stacks[cmd.target - 1]
+                .stack
+                .push_back(tmp_stack.pop_back().unwrap());
         }
     }
 }
