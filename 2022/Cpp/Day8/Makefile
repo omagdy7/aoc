@@ -6,4 +6,3 @@ test:
 
 prod:
 	./ans.o < input.prod
-
