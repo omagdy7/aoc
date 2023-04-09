@@ -44,11 +44,11 @@ fn solve_part_two(data: &str) -> usize {
 fn main() {
     let data_test = include_str!("../data/day6.test");
     let data_prod = include_str!("../data/day6.prod");
+
     println!("{}", solve_part_one(data_test));
     println!("{}", solve_part_one(data_prod));
     println!("{}", solve_part_two(data_test));
     println!("{}", solve_part_two(data_prod));
-
 
     println!("{}", solve_functional(data_test, 4));
     println!("{}", solve_functional(data_prod, 4));

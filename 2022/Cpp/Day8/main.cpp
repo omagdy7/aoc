@@ -100,8 +100,6 @@ array<int ,4> calcScenicScore(P2 p, vector<vector<int>> &trees) {
   // right
   for (int i = p.y + 1; i < c; i++) {
     if (trees[p.x][i] >= trees[p.x][p.y] || i == r - 1) {
-      // print("in right: ",trees[p.x][i], trees[p.x][p.y]);
-      // print("i: ", i, "p.y: ", p.y);
       res[2] = abs(p.y - i);
       break;
     }
