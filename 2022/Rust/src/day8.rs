@@ -18,7 +18,6 @@ impl Direction {
 }
 
 fn is_visible(grd: &Vec<&str>, direction: &Direction, visible: &mut Vec<Vec<bool>>) {
-    let mut max_height = 0;
     match direction {
         Direction::Up => {
             for j in 0..grd[0].len() {
@@ -109,16 +108,13 @@ fn count_vis_up(pos: (usize, usize), grd: &Vec<&str>) -> usize {
     let mut cnt = 0;
     if is_valid_idx(pos, (grd.len(), grd[0].len()), &Direction::Up) {
         let ch = grd[pos.0].chars().nth(pos.1).unwrap() as u8;
-        // print!("{:?}  ", pos);
         for i in (0..=(pos.0 - 1)).rev() {
-            // print!("{:?}, ", (i, pos.1));
             if grd[i].chars().nth(pos.1).unwrap() as u8 >= ch {
                 cnt += 1;
                 break;
             }
             cnt += 1
         }
-        // println!()
     }
     cnt
 }
