@@ -27,13 +27,12 @@ impl Crt {
         }
     }
 
-    fn get_overlap_with_sprite(&self, sprite: &Sprite, cycle: i32) -> Option<i32> {
+    fn is_overlapping_with_sprite(&self, sprite: &Sprite, cycle: i32) -> Option<i32> {
         let x = cycle % 40;
-        if x == sprite.location || x == sprite.location - 1 || x == sprite.location + 1 {
-            Some(x)
-        } else {
-            None
+        if ((x - 1)..=(x + 1)).contains(&sprite.location) {
+            return Some(x);
         }
+        None
     }
 }
 
@@ -129,7 +128,7 @@ fn solve_part_two(data: &str) {
                             y_val += 1;
                         }
                     }
-                    match crt.get_overlap_with_sprite(&sprite, cur_cycle) {
+                    match crt.is_overlapping_with_sprite(&sprite, cur_cycle) {
                         Some(idx) => crt.pixels[y_val as usize]
                             .replace_range((idx as usize)..=idx as usize, "#"),
                         None => {}
@@ -144,7 +143,7 @@ fn solve_part_two(data: &str) {
                         y_val += 1;
                     }
                 }
-                match crt.get_overlap_with_sprite(&sprite, cur_cycle) {
+                match crt.is_overlapping_with_sprite(&sprite, cur_cycle) {
                     Some(idx) => {
                         crt.pixels[y_val as usize].replace_range((idx as usize)..=idx as usize, "#")
                     }

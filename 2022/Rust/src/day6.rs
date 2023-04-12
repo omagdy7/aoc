@@ -42,8 +42,8 @@ fn solve_part_two(data: &str) -> usize {
 }
 
 fn main() {
-    let data_test = include_str!("../data/day6.test");
-    let data_prod = include_str!("../data/day6.prod");
+    let data_test = include_str!("../input/day6.test");
+    let data_prod = include_str!("../input/day6.prod");
 
     println!("{}", solve_part_one(data_test));
     println!("{}", solve_part_one(data_prod));

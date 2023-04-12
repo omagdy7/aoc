@@ -81,51 +81,32 @@ impl Simulation {
         }
     }
 
+    fn update_head_helper(&mut self, amount: &usize, tail_idx: usize, pos_increment: (i32, i32)) {
+        for _ in 1..=*amount {
+            self.head_pos.0 += pos_increment.0;
+            self.head_pos.1 += pos_increment.1;
+            for i in 0..9 {
+                if !self.is_tail_one_block_away(i) {
+                    self.update_tail(&self.get_direction(i), i);
+                    self.unique_pos.insert(self.tail_pos[tail_idx]);
+                }
+            }
+        }
+    }
+
     fn update_head(&mut self, command: &Command, tail_idx: usize) {
         match command {
             Command::Up(amount) => {
-                for _ in 1..=*amount {
-                    self.head_pos.1 += 1;
-                    for i in 0..9 {
-                        if !self.is_tail_one_block_away(i) {
-                            self.update_tail(&self.get_direction(i), i);
-                            self.unique_pos.insert(self.tail_pos[tail_idx]);
-                        }
-                    }
-                }
+                self.update_head_helper(amount, tail_idx, (0, 1));
             }
             Command::Down(amount) => {
-                for _ in 1..=*amount {
-                    self.head_pos.1 -= 1;
-                    for i in 0..9 {
-                        if !self.is_tail_one_block_away(i) {
-                            self.update_tail(&self.get_direction(i), i);
-                            self.unique_pos.insert(self.tail_pos[tail_idx]);
-                        }
-                    }
-                }
+                self.update_head_helper(amount, tail_idx, (0, -1));
             }
             Command::Right(amount) => {
-                for _ in 1..=*amount {
-                    self.head_pos.0 += 1;
-                    for i in 0..9 {
-                        if !self.is_tail_one_block_away(i) {
-                            self.update_tail(&self.get_direction(i), i);
-                            self.unique_pos.insert(self.tail_pos[tail_idx]);
-                        }
-                    }
-                }
+                self.update_head_helper(amount, tail_idx, (1, 0));
             }
             Command::Left(amount) => {
-                for _ in 1..=*amount {
-                    self.head_pos.0 -= 1;
-                    for i in 0..9 {
-                        if !self.is_tail_one_block_away(i) {
-                            self.update_tail(&self.get_direction(i), i);
-                            self.unique_pos.insert(self.tail_pos[tail_idx]);
-                        }
-                    }
-                }
+                self.update_head_helper(amount, tail_idx, (-1, 0));
             }
         }
     }
