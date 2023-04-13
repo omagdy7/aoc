@@ -183,8 +183,8 @@ fn solve_part_two(data: &str) -> String {
 }
 
 fn main() {
-    let data_test = include_str!("../data/day5.test");
-    let data_prod = include_str!("../data/day5.prod");
+    let data_test = include_str!("../input/day5.test");
+    let data_prod = include_str!("../input/day5.prod");
 
     println!("part one test: {}", solve_part_one(data_test));
     println!("part one prod: {}", solve_part_one(data_prod));
