@@ -19,7 +19,7 @@ fn solve_part_two(data: &str) -> u32 {
 }
 
 fn main() {
-    let data = include_str!("../data/day1.prod");
+    let data = include_str!("../input/day1.prod");
     println!("{:?}", solve_part_one(data));
     println!("{:?}", solve_part_two(data));
 }
