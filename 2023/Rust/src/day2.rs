@@ -14,33 +14,21 @@ impl From<&str> for Game {
         let (_, id) = game.split_once(' ').unwrap();
         let id = id.parse::<usize>().unwrap();
         let (mut r, mut g, mut b) = (0, 0, 0);
+        let mut items: Vec<(u32, &str)> = vec![];
         for set in sets.split(';') {
-            dbg!(&set.trim_start());
-            let (first, second) = set.trim_start().split_once(',').unwrap();
-            let (num_1, color_1) = first.split_once(' ').unwrap();
-            let (num_2, color_2) = second.split_once(' ').unwrap();
-            match color_1 {
-                "red" => {
-                    r += num_1.parse::<u32>().unwrap();
-                }
-                "green" => {
-                    g += num_1.parse::<u32>().unwrap();
-                }
-                "blue" => {
-                    b += num_1.parse::<u32>().unwrap();
-                }
-                _ => {}
+            let sublist = set.split(',');
+            for list in sublist {
+                let list = list.trim_start();
+                let (num, color) = list.split_once(' ').unwrap();
+                items.push((num.parse::<u32>().unwrap(), color));
             }
-            match color_2 {
-                "red" => {
-                    r += num_2.parse::<u32>().unwrap();
-                }
-                "green" => {
-                    g += num_2.parse::<u32>().unwrap();
-                }
-                "blue" => {
-                    b += num_2.parse::<u32>().unwrap();
-                }
+        }
+        for (num, color) in items {
+            use std::cmp::max;
+            match color {
+                "red" => r = max(r, num),
+                "green" => g = max(g, num),
+                "blue" => b = max(b, num),
                 _ => {}
             }
         }
@@ -58,20 +46,31 @@ fn solve_part_one(data: &str) -> u32 {
     for game in data.lines() {
         games.push(Game::from(game));
     }
-    dbg!(&games);
-    42
+    let mut ans: u32 = 0;
+    for game in games {
+        if game.red <= 12 && game.green <= 13 && game.blue <= 14 {
+            ans += game.id as u32;
+        }
+    }
+    ans
 }
 
 fn solve_part_two(data: &str) -> u32 {
-    todo!()
+    let mut games: Vec<Game> = vec![];
+    for game in data.lines() {
+        games.push(Game::from(game));
+    }
+    games
+        .iter()
+        .map(|game| game.red * game.blue * game.green)
+        .sum::<u32>()
 }
 
 fn main() {
     let test_1 = include_str!("../input/day2_1.test");
-    let test_2 = include_str!("../input/day2_2.test");
     let prod = include_str!("../input/day2.prod");
     println!("part_1 test: {:?}", solve_part_one(test_1));
-    // println!("part_1 prod {:?}", solve_part_one(prod));
-    // println!("part_2 test: {:?}", solve_part_two(test_2));
-    // println!("part_2 prod {:?}", solve_part_two(prod));
+    println!("part_1 prod {:?}", solve_part_one(prod));
+    println!("part_2 test: {:?}", solve_part_two(test_1));
+    println!("part_2 prod {:?}", solve_part_two(prod));
 }
