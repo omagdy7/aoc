@@ -42,26 +42,15 @@ impl From<&str> for Game {
 }
 
 fn solve_part_one(data: &str) -> u32 {
-    let mut games: Vec<Game> = vec![];
-    for game in data.lines() {
-        games.push(Game::from(game));
-    }
-    let mut ans: u32 = 0;
-    for game in games {
-        if game.red <= 12 && game.green <= 13 && game.blue <= 14 {
-            ans += game.id as u32;
-        }
-    }
-    ans
+    data.lines()
+        .map(|game| Game::from(game))
+        .filter(|game| game.red <= 12 && game.green <= 13 && game.blue <= 14)
+        .fold(0, |acc, game| acc + game.id as u32)
 }
 
 fn solve_part_two(data: &str) -> u32 {
-    let mut games: Vec<Game> = vec![];
-    for game in data.lines() {
-        games.push(Game::from(game));
-    }
-    games
-        .iter()
+    data.lines()
+        .map(|game| Game::from(game))
         .map(|game| game.red * game.blue * game.green)
         .sum::<u32>()
 }
