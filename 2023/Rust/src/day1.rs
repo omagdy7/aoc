@@ -4,7 +4,7 @@ fn solve_part_one(data: &str) -> u32 {
         .collect::<Vec<_>>()
         .iter()
         .map(|x| {
-            format!("{}{}", x.chars().nth(0).unwrap(), x.chars().last().unwrap())
+            format!("{}{}", x.chars().next().unwrap(), x.chars().last().unwrap())
                 .parse::<u32>()
                 .unwrap()
         })
