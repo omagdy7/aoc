@@ -1,19 +1,15 @@
+use std::collections::HashSet;
+
 #[derive(Debug)]
 struct ScratchCard {
-    winning: Vec<u32>,
-    numbers: Vec<u32>,
+    winning: HashSet<u32>,
+    numbers: HashSet<u32>,
     cnt: usize,
 }
 
 impl ScratchCard {
-    fn get_matching(&self) -> u32 {
-        let mut cnt = 0;
-        for number in self.numbers.iter() {
-            if self.winning.contains(&number) {
-                cnt += 1;
-            }
-        }
-        cnt
+    fn get_matching(&self) -> usize {
+        self.winning.intersection(&self.numbers).count()
     }
 }
 
@@ -28,14 +24,14 @@ impl From<&str> for ScratchCard {
                 .split(' ')
                 .filter(|x| x.parse::<u32>().is_ok())
                 .map(|x| x.parse::<u32>().unwrap())
-                .collect::<Vec<u32>>(),
+                .collect::<HashSet<_>>(),
             numbers
                 .trim_start()
                 .trim_end()
                 .split(' ')
                 .filter(|x| x.parse::<u32>().is_ok())
                 .map(|x| x.parse::<u32>().unwrap())
-                .collect::<Vec<u32>>(),
+                .collect::<HashSet<_>>(),
         );
         Self {
             winning,
@@ -68,7 +64,7 @@ fn solve_part_two(data: &str) -> u32 {
         let matches = scratch_cards[i].get_matching();
         let cnt = scratch_cards[i].cnt;
         for _ in 0..cnt {
-            for j in (i + 1)..(i + matches as usize + 1) {
+            for j in (i + 1)..(i + matches + 1) {
                 scratch_cards[j].cnt += 1;
             }
         }
@@ -77,10 +73,10 @@ fn solve_part_two(data: &str) -> u32 {
 }
 
 fn main() {
-    let test_1 = include_str!("../input/day4.test");
+    let test = include_str!("../input/day4.test");
     let prod = include_str!("../input/day4.prod");
-    println!("part_1 test: {:?}", solve_part_one(test_1));
+    println!("part_1 test: {:?}", solve_part_one(test));
     println!("part_1 prod {:?}", solve_part_one(prod));
-    println!("part_2 test: {:?}", solve_part_two(test_1));
+    println!("part_2 test: {:?}", solve_part_two(test));
     println!("part_2 prod {:?}", solve_part_two(prod));
 }
