@@ -3,10 +3,6 @@ name = "Rust"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-
 
 [[bin]]
 name = "day1"
@@ -75,5 +71,8 @@ path = "src/day16.rs"
 [[bin]]
 name = "day17"
 path = "src/day17.rs"
+
+[dependencies]
+rayon = "1.8.0"
 
 

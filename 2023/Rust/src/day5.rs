@@ -1,4 +1,5 @@
-use std::{collections::HashSet, ops::Add, ops::AddAssign};
+use rayon::prelude::*;
+use std::collections::HashSet;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Hash)]
 struct Range {
@@ -36,19 +37,51 @@ impl Range {
 }
 
 fn solve_part_one(data: &str) -> u32 {
+    use std::cmp::min;
     let almanac = Almanac::from(data);
-    let mut seeds = almanac.seeds.clone();
-    for (_, maps) in almanac.maps.iter() {
-        for seed in seeds.iter_mut() {
-            let tmp = seed.clone();
+    let seeds = almanac.seeds.clone();
+    let mut ans = i64::MAX;
+    for seed in seeds.iter() {
+        let mut mn = seed.clone();
+        for (_, maps) in almanac.maps.iter() {
+            let tmp = mn.clone();
             for seed_map in maps.iter() {
                 if seed_map.contains(tmp) {
-                    *seed += (seed_map.dest as i64 - seed_map.src as i64) as i64;
+                    mn = mn + seed_map.dest as i64 - seed_map.src as i64;
                 }
             }
         }
+        ans = min(ans, mn);
     }
-    *seeds.iter().min().unwrap() as u32
+    ans as u32
+}
+
+fn solve_part_two_slow(data: &str) -> u64 {
+    use std::cmp::min;
+    let almanac = Almanac::from(data);
+    let seeds = Vec::from_iter(almanac.seeds.clone().into_iter());
+    let mut pars = seeds
+        .iter()
+        .enumerate()
+        .step_by(2)
+        .map(|(i, _)| (i, i64::MAX))
+        .collect::<Vec<_>>();
+    // let n = seeds.len();
+    pars.par_iter_mut().for_each(|(i, ans)| {
+        for seed in seeds[*i]..seeds[*i] + seeds[*i + 1] {
+            let mut mn = seed.clone();
+            for (_, maps) in almanac.maps.iter() {
+                let tmp = mn.clone();
+                for seed_map in maps.iter() {
+                    if seed_map.contains(tmp) {
+                        mn = mn + seed_map.dest as i64 - seed_map.src as i64;
+                    }
+                }
+            }
+            *ans = min(*ans, mn)
+        }
+    });
+    *pars.iter().map(|(x, ans)| ans).min().unwrap() as u64
 }
 
 fn solve_part_two(data: &str) -> u64 {
@@ -61,7 +94,6 @@ fn solve_part_two(data: &str) -> u64 {
         ))
     }
     for (_, maps) in almanac.maps.iter() {
-        dbg!(&seeds);
         let mut new_seeds: HashSet<Range> = HashSet::from_iter(seeds.clone().into_iter());
         for seed in seeds.iter_mut() {
             let tmp = seed.clone();
@@ -78,7 +110,6 @@ fn solve_part_two(data: &str) -> u64 {
         }
         seeds = Vec::from_iter(new_seeds.into_iter());
     }
-    // dbg!(&seeds);
     (*seeds).iter().map(|rng| rng.start).min().unwrap() as u64
 }
 
@@ -154,6 +185,6 @@ fn main() {
     let prod = include_str!("../input/day5.prod");
     println!("part_1 test: {:?}", solve_part_one(test));
     println!("part_1 prod {:?}", solve_part_one(prod));
-    println!("part_2 test: {:?}", solve_part_two(test));
-    // println!("part_2 prod {:?}", solve_part_two(prod));
+    println!("part_2 test: {:?}", solve_part_two_slow(test));
+    println!("part_2 prod {:?}", solve_part_two_slow(prod));
 }
