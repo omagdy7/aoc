@@ -42,12 +42,8 @@ impl From<&str> for ScratchCard {
 }
 
 fn solve_part_one(data: &str) -> u32 {
-    let mut scratch_cards: Vec<ScratchCard> = vec![];
-    for line in data.lines() {
-        scratch_cards.push(ScratchCard::from(line))
-    }
-    scratch_cards
-        .iter()
+    data.lines()
+        .map(|line| ScratchCard::from(line))
         .map(|card| card.get_matching())
         .filter(|x| *x > 0)
         .map(|x| 2_u32.pow(std::cmp::max(x - 1, 0) as u32))
