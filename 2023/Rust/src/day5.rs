@@ -1,40 +1,4 @@
 use rayon::prelude::*;
-use std::collections::HashSet;
-
-#[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Hash)]
-struct Range {
-    start: i64,
-    end: i64,
-}
-
-impl Range {
-    fn new(s: i64, e: i64) -> Self {
-        Self { start: s, end: e }
-    }
-
-    fn add(&mut self, inc: i64) {
-        self.start += inc;
-        self.end += inc;
-    }
-
-    fn contains(&self, val: i64) -> bool {
-        (self.start..self.end).contains(&val)
-    }
-
-    fn is_in(&self, other: &Range) -> bool {
-        self.start >= other.start && self.end <= other.end
-    }
-
-    fn overlap(&self, other: &Range) -> Option<(Range, Range)> {
-        use std::cmp::{max, min};
-        if self.start > other.start && self.start > other.end {
-            return None;
-        }
-        let overlap_rng = Range::new(max(self.start, other.start), min(self.end, other.end - 1));
-        let rest = Range::new(overlap_rng.end + 1, max(self.start, other.start));
-        Some((overlap_rng, rest))
-    }
-}
 
 fn solve_part_one(data: &str) -> u32 {
     use std::cmp::min;
@@ -81,36 +45,37 @@ fn solve_part_two_slow(data: &str) -> u64 {
             *ans = min(*ans, mn)
         }
     });
-    *pars.iter().map(|(x, ans)| ans).min().unwrap() as u64
+    *pars.iter().map(|(_, ans)| ans).min().unwrap() as u64
 }
 
 fn solve_part_two(data: &str) -> u64 {
     let almanac = Almanac::from(data);
-    let mut seeds: Vec<Range> = vec![];
-    for i in (0..almanac.seeds.len()).step_by(2) {
-        seeds.push(Range::new(
-            almanac.seeds[i],
-            almanac.seeds[i] + almanac.seeds[i + 1],
-        ))
-    }
-    for (_, maps) in almanac.maps.iter() {
-        let mut new_seeds: HashSet<Range> = HashSet::from_iter(seeds.clone().into_iter());
-        for seed in seeds.iter_mut() {
-            let tmp = seed.clone();
-            for seed_map in maps.iter() {
-                if seed_map.is_in(&tmp) {
-                    (*seed).add(seed_map.dest as i64 - seed_map.src as i64);
-                } else if let Some((mut overlap_rng, rest)) = seed_map.overlap(&tmp) {
-                    overlap_rng.add(seed_map.dest as i64 - seed_map.src as i64);
-                    new_seeds.remove(seed);
-                    new_seeds.insert(overlap_rng);
-                    new_seeds.insert(rest);
+    let seeds = Vec::from_iter(almanac.seeds.clone().into_iter());
+    let ranges = seeds
+        .iter()
+        .enumerate()
+        .step_by(2)
+        .map(|(i, _)| (seeds[i]..seeds[i] + seeds[i + 1]))
+        .collect::<Vec<_>>();
+    let mut ans = 0;
+    'outer: loop {
+        let mut mn = ans;
+        for (_, maps) in almanac.maps.iter().rev() {
+            let tmp = mn.clone();
+            for seed_map in maps.iter().rev() {
+                if seed_map.contains_dst(tmp) {
+                    mn = mn + seed_map.src as i64 - seed_map.dest as i64;
                 }
             }
         }
-        seeds = Vec::from_iter(new_seeds.into_iter());
+        for range in ranges.iter() {
+            if range.contains(&mn) {
+                break 'outer;
+            }
+        }
+        ans += 1;
     }
-    (*seeds).iter().map(|rng| rng.start).min().unwrap() as u64
+    ans as u64
 }
 
 type Seeds = Vec<i64>;
@@ -151,18 +116,12 @@ struct SeedMap {
 }
 
 impl SeedMap {
-    fn is_in(&self, seed: &Range) -> bool {
-        let rng = Range::new(self.src as i64, self.src as i64 + self.range_len as i64);
-        seed.is_in(&rng)
-    }
-
-    fn overlap(&self, seed: &Range) -> Option<(Range, Range)> {
-        let rng = Range::new(self.src as i64, self.src as i64 + self.range_len as i64);
-        seed.overlap(&rng)
-    }
-
     fn contains(&self, seed: i64) -> bool {
         (self.src..self.src + self.range_len).contains(&(seed as usize))
+    }
+
+    fn contains_dst(&self, seed: i64) -> bool {
+        (self.dest..self.dest + self.range_len).contains(&(seed as usize))
     }
 }
 
@@ -185,6 +144,6 @@ fn main() {
     let prod = include_str!("../input/day5.prod");
     println!("part_1 test: {:?}", solve_part_one(test));
     println!("part_1 prod {:?}", solve_part_one(prod));
-    println!("part_2 test: {:?}", solve_part_two_slow(test));
-    println!("part_2 prod {:?}", solve_part_two_slow(prod));
+    println!("part_2 test: {:?}", solve_part_two(test));
+    println!("part_2 prod {:?}", solve_part_two(prod));
 }
