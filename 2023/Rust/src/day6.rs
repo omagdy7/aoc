@@ -58,28 +58,31 @@ impl From<&str> for Race<Part2> {
 
 fn solve_part_one(data: &str) -> u64 {
     let race: Race<Part1> = Race::from(data);
-    let mut cnt = 0;
-    let mut ans = 1;
-    for (i, _) in race.times.iter().enumerate() {
-        for t in 0..=race.times[i] {
-            if (race.times[i] - t) * t > race.distances[i] {
-                cnt += 1;
-            }
-        }
-        ans *= cnt;
-        cnt = 0;
-    }
-    ans
+    race.times
+        .iter()
+        .zip(race.distances.iter())
+        .map(|(&time, &distance)| {
+            (0..time)
+                .into_iter()
+                .filter(|t| (time - t) * t > distance)
+                .map(|_| distance)
+                .count()
+        })
+        .product::<usize>() as u64
 }
 fn solve_part_two(data: &str) -> u64 {
     let race: Race<Part2> = Race::from(data);
-    let mut ans = 0;
-    for t in 0..=race.times[0] {
-        if (race.times[0] - t) * t > race.distances[0] {
-            ans += 1;
-        }
-    }
-    ans
+    race.times
+        .iter()
+        .zip(race.distances.iter())
+        .map(|(&time, &distance)| {
+            (0..time)
+                .into_iter()
+                .filter(|t| (time - t) * t > distance)
+                .map(|_| distance)
+                .count()
+        })
+        .product::<usize>() as u64
 }
 
 fn main() {
