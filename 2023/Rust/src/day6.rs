@@ -56,6 +56,38 @@ impl From<&str> for Race<Part2> {
     }
 }
 
+fn quadratic_equation(a: f64, b: f64, c: f64) -> (f64, f64) {
+    let discriminant = b * b - 4.0 * a * c;
+    let root1 = (-b - discriminant.sqrt()) / (2.0 * a);
+    let root2 = (-b + discriminant.sqrt()) / (2.0 * a);
+    // hacky solution to round the first root up and the scond root down
+    ((root1 + 0.52).round(), (root2 - 0.52).round())
+}
+
+fn solve_math_two(data: &str) -> u64 {
+    let race: Race<Part2> = Race::from(data);
+    race.times
+        .iter()
+        .zip(race.distances.iter())
+        .map(|(&time, &distance)| {
+            let (start, end) = quadratic_equation(1.0, -((time - 0) as f64), distance as f64);
+            (end - start + 1.0) as usize
+        })
+        .product::<usize>() as u64
+}
+
+fn solve_math_one(data: &str) -> u64 {
+    let race: Race<Part1> = Race::from(data);
+    race.times
+        .iter()
+        .zip(race.distances.iter())
+        .map(|(&time, &distance)| {
+            let (start, end) = quadratic_equation(1.0, -((time - 0) as f64), distance as f64);
+            (end - start + 1.0) as usize
+        })
+        .product::<usize>() as u64
+}
+
 fn solve_part_one(data: &str) -> u64 {
     let race: Race<Part1> = Race::from(data);
     race.times
@@ -88,8 +120,8 @@ fn solve_part_two(data: &str) -> u64 {
 fn main() {
     let test = include_str!("../input/day6.test");
     let prod = include_str!("../input/day6.prod");
-    println!("part_1 test: {:?}", solve_part_one(test));
-    println!("part_1 prod {:?}", solve_part_one(prod));
-    println!("part_2 test: {:?}", solve_part_two(test));
-    println!("part_2 prod {:?}", solve_part_two(prod));
+    println!("part_1 test: {:?}", solve_math_one(test));
+    println!("part_1 prod {:?}", solve_math_one(prod));
+    println!("part_2 test: {:?}", solve_math_two(test));
+    println!("part_2 prod {:?}", solve_math_two(prod));
 }
