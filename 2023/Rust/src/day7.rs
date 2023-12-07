@@ -1,22 +1,26 @@
+#![feature(specialization)]
 use std::{cmp::Ordering, collections::HashMap, marker::PhantomData};
 
 struct One;
 struct Two;
 
-#[derive(Debug, PartialEq, PartialOrd, Ord, Eq)]
-struct RoundJokers<'a> {
-    hand: HandJokers<'a>,
-    bid: usize,
-}
+trait PartOne {}
+trait PartTwo {}
+trait PartOneTwo {}
+
+impl PartOne for One {}
+impl PartTwo for Two {}
+impl PartOneTwo for One {}
+impl PartOneTwo for Two {}
 
 #[derive(Debug, PartialEq, PartialOrd, Ord, Eq)]
-struct Round<'a> {
-    hand: Hand<'a>,
+struct Round<'a, Part = One> {
+    hand: Hand<'a, Part>,
     bid: usize,
 }
 
 #[derive(Debug, Eq, Clone, Copy, Ord)]
-enum Hand<'a> {
+enum Hand<'a, Part = One> {
     FiveOfKind(&'a str),
     FourOfKind(&'a str),
     FullHouse(&'a str),
@@ -24,17 +28,7 @@ enum Hand<'a> {
     TwoPair(&'a str),
     OnePair(&'a str),
     HighCard(&'a str),
-}
-
-#[derive(Debug, Eq, Clone, Copy, Ord)]
-enum HandJokers<'a> {
-    FiveOfKind(&'a str),
-    FourOfKind(&'a str),
-    FullHouse(&'a str),
-    ThreeOfKind(&'a str),
-    TwoPair(&'a str),
-    OnePair(&'a str),
-    HighCard(&'a str),
+    _Phantom(PhantomData<Part>),
 }
 
 const LABELS: [char; 13] = [
@@ -45,7 +39,7 @@ const LABELS_JOKERS: [char; 13] = [
     'J', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'Q', 'K', 'A',
 ];
 
-fn stronger_joker(a: &str, b: &str) -> Option<Ordering> {
+fn stronger_two(a: &str, b: &str) -> Option<Ordering> {
     for (first, second) in a.chars().zip(b.chars()) {
         let pos_first = LABELS_JOKERS.iter().position(|&x| x == first);
         let pos_second = LABELS_JOKERS.iter().position(|&x| x == second);
@@ -58,7 +52,7 @@ fn stronger_joker(a: &str, b: &str) -> Option<Ordering> {
     Some(Ordering::Equal)
 }
 
-fn stronger(a: &str, b: &str) -> Option<Ordering> {
+fn stronger_one(a: &str, b: &str) -> Option<Ordering> {
     for (first, second) in a.chars().zip(b.chars()) {
         let pos_first = LABELS.iter().position(|&x| x == first);
         let pos_second = LABELS.iter().position(|&x| x == second);
@@ -71,23 +65,7 @@ fn stronger(a: &str, b: &str) -> Option<Ordering> {
     Some(Ordering::Equal)
 }
 
-impl<'a> PartialEq for HandJokers<'a> {
-    fn eq(&self, other: &Self) -> bool {
-        use HandJokers::*;
-        match (self, other) {
-            (FiveOfKind(a), FiveOfKind(b)) => a == b,
-            (FourOfKind(a), FourOfKind(b)) => a == b,
-            (FullHouse(a), FullHouse(b)) => a == b,
-            (ThreeOfKind(a), ThreeOfKind(b)) => a == b,
-            (TwoPair(a), TwoPair(b)) => a == b,
-            (OnePair(a), OnePair(b)) => a == b,
-            (HighCard(a), HighCard(b)) => a == b,
-            (_, _) => false,
-        }
-    }
-}
-
-impl<'a> PartialEq for Hand<'a> {
+impl<'a, T> PartialEq for Hand<'a, T> {
     fn eq(&self, other: &Self) -> bool {
         use Hand::*;
         match (self, other) {
@@ -103,69 +81,77 @@ impl<'a> PartialEq for Hand<'a> {
     }
 }
 
-impl<'a> PartialOrd for HandJokers<'a> {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        use HandJokers::*;
-        match (self, other) {
-            (FiveOfKind(a), FiveOfKind(b)) => stronger_joker(a, b),
-            (FiveOfKind(_), _) => Some(Ordering::Greater),
-            (_, FiveOfKind(_)) => Some(Ordering::Less),
-            (FourOfKind(a), FourOfKind(b)) => stronger_joker(a, b),
-            (FourOfKind(_), _) => Some(Ordering::Greater),
-            (_, FourOfKind(_)) => Some(Ordering::Less),
-            (FullHouse(a), FullHouse(b)) => stronger_joker(a, b),
-            (FullHouse(_), _) => Some(Ordering::Greater),
-            (_, FullHouse(_)) => Some(Ordering::Less),
-            (ThreeOfKind(a), ThreeOfKind(b)) => stronger_joker(a, b),
-            (ThreeOfKind(_), _) => Some(Ordering::Greater),
-            (_, ThreeOfKind(_)) => Some(Ordering::Less),
-            (TwoPair(a), TwoPair(b)) => stronger_joker(a, b),
-            (TwoPair(_), _) => Some(Ordering::Greater),
-            (_, TwoPair(_)) => Some(Ordering::Less),
-            (OnePair(a), OnePair(b)) => stronger_joker(a, b),
-            (OnePair(_), _) => Some(Ordering::Greater),
-            (_, OnePair(_)) => Some(Ordering::Less),
-            (HighCard(a), HighCard(b)) => stronger_joker(a, b),
-        }
+impl<'a, T> PartialOrd for Hand<'a, T> {
+    default fn partial_cmp(&self, _: &Self) -> Option<Ordering> {
+        unreachable!()
     }
 }
 
-impl<'a> PartialOrd for Hand<'a> {
+impl<'a> PartialOrd for Hand<'a, Two> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         use Hand::*;
         match (self, other) {
-            (FiveOfKind(a), FiveOfKind(b)) => stronger(a, b),
+            (FiveOfKind(a), FiveOfKind(b)) => stronger_two(a, b),
             (FiveOfKind(_), _) => Some(Ordering::Greater),
             (_, FiveOfKind(_)) => Some(Ordering::Less),
-            (FourOfKind(a), FourOfKind(b)) => stronger(a, b),
+            (FourOfKind(a), FourOfKind(b)) => stronger_two(a, b),
             (FourOfKind(_), _) => Some(Ordering::Greater),
             (_, FourOfKind(_)) => Some(Ordering::Less),
-            (FullHouse(a), FullHouse(b)) => stronger(a, b),
+            (FullHouse(a), FullHouse(b)) => stronger_two(a, b),
             (FullHouse(_), _) => Some(Ordering::Greater),
             (_, FullHouse(_)) => Some(Ordering::Less),
-            (ThreeOfKind(a), ThreeOfKind(b)) => stronger(a, b),
+            (ThreeOfKind(a), ThreeOfKind(b)) => stronger_two(a, b),
             (ThreeOfKind(_), _) => Some(Ordering::Greater),
             (_, ThreeOfKind(_)) => Some(Ordering::Less),
-            (TwoPair(a), TwoPair(b)) => stronger(a, b),
+            (TwoPair(a), TwoPair(b)) => stronger_two(a, b),
             (TwoPair(_), _) => Some(Ordering::Greater),
             (_, TwoPair(_)) => Some(Ordering::Less),
-            (OnePair(a), OnePair(b)) => stronger(a, b),
+            (OnePair(a), OnePair(b)) => stronger_two(a, b),
             (OnePair(_), _) => Some(Ordering::Greater),
             (_, OnePair(_)) => Some(Ordering::Less),
-            (HighCard(a), HighCard(b)) => stronger(a, b),
+            (HighCard(a), HighCard(b)) => stronger_two(a, b),
+            (_, _) => None,
         }
     }
 }
 
-impl<'a> From<&'a str> for RoundJokers<'a> {
+impl<'a> PartialOrd for Hand<'a, One> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        use Hand::*;
+        match (self, other) {
+            (FiveOfKind(a), FiveOfKind(b)) => stronger_one(a, b),
+            (FiveOfKind(_), _) => Some(Ordering::Greater),
+            (_, FiveOfKind(_)) => Some(Ordering::Less),
+            (FourOfKind(a), FourOfKind(b)) => stronger_one(a, b),
+            (FourOfKind(_), _) => Some(Ordering::Greater),
+            (_, FourOfKind(_)) => Some(Ordering::Less),
+            (FullHouse(a), FullHouse(b)) => stronger_one(a, b),
+            (FullHouse(_), _) => Some(Ordering::Greater),
+            (_, FullHouse(_)) => Some(Ordering::Less),
+            (ThreeOfKind(a), ThreeOfKind(b)) => stronger_one(a, b),
+            (ThreeOfKind(_), _) => Some(Ordering::Greater),
+            (_, ThreeOfKind(_)) => Some(Ordering::Less),
+            (TwoPair(a), TwoPair(b)) => stronger_one(a, b),
+            (TwoPair(_), _) => Some(Ordering::Greater),
+            (_, TwoPair(_)) => Some(Ordering::Less),
+            (OnePair(a), OnePair(b)) => stronger_one(a, b),
+            (OnePair(_), _) => Some(Ordering::Greater),
+            (_, OnePair(_)) => Some(Ordering::Less),
+            (HighCard(a), HighCard(b)) => stronger_one(a, b),
+            (_, _) => None,
+        }
+    }
+}
+
+impl<'a> From<&'a str> for Round<'a, Two> {
     fn from(round: &'a str) -> Self {
         let (hand, bid) = round.split_once(' ').unwrap();
-        let (hand, bid) = (HandJokers::from(hand), bid.parse::<usize>().unwrap());
+        let (hand, bid) = (Hand::<Two>::from(hand), bid.parse::<usize>().unwrap());
         Self { hand, bid }
     }
 }
 
-impl<'a> From<&'a str> for Round<'a> {
+impl<'a> From<&'a str> for Round<'a, One> {
     fn from(round: &'a str) -> Self {
         let (hand, bid) = round.split_once(' ').unwrap();
         let (hand, bid) = (Hand::from(hand), bid.parse::<usize>().unwrap());
@@ -173,9 +159,9 @@ impl<'a> From<&'a str> for Round<'a> {
     }
 }
 
-impl<'a> From<&'a str> for HandJokers<'a> {
+impl<'a> From<&'a str> for Hand<'a, Two> {
     fn from(hand: &'a str) -> Self {
-        use HandJokers::*;
+        use Hand::*;
         let mut frq: HashMap<char, usize> = HashMap::new();
 
         for ch in hand.chars() {
@@ -207,7 +193,6 @@ impl<'a> From<&'a str> for HandJokers<'a> {
         }
 
         if let Some(_) = jokers {
-            use HandJokers::*;
             let new_hand = hand.replace("J", &most_char.to_string());
             let mut jfrq: HashMap<char, usize> = HashMap::new();
             for ch in new_hand.chars() {
@@ -252,7 +237,7 @@ impl<'a> From<&'a str> for HandJokers<'a> {
         }
     }
 }
-impl<'a> From<&'a str> for Hand<'a> {
+impl<'a> From<&'a str> for Hand<'a, One> {
     fn from(hand: &'a str) -> Self {
         let mut frq: HashMap<char, usize> = HashMap::new();
         for ch in hand.chars() {
@@ -289,7 +274,7 @@ impl<'a> From<&'a str> for Hand<'a> {
 fn solve_part_one(data: &str) -> u64 {
     let mut rounds = data
         .lines()
-        .map(|line| Round::from(line))
+        .map(|line| Round::<One>::from(line))
         .collect::<Vec<_>>();
     rounds.sort_by(|b, a| a.hand.partial_cmp(&b.hand).unwrap());
     let n = rounds.len();
@@ -302,7 +287,7 @@ fn solve_part_one(data: &str) -> u64 {
 fn solve_part_two(data: &str) -> u64 {
     let mut rounds = data
         .lines()
-        .map(|line| RoundJokers::from(line))
+        .map(|line| Round::<Two>::from(line))
         .collect::<Vec<_>>();
     rounds.sort_by(|b, a| a.hand.partial_cmp(&b.hand).unwrap());
     let n = rounds.len();
