@@ -1,16 +1,16 @@
-use std::{collections::HashMap, marker::PhantomData};
+use std::marker::PhantomData;
 
 #[derive(Debug)]
-struct Race<State = Part1> {
+struct Race<Part = One> {
     times: Vec<u64>,
     distances: Vec<u64>,
-    state: std::marker::PhantomData<State>,
+    state: std::marker::PhantomData<Part>,
 }
 
-struct Part1;
-struct Part2;
+struct One;
+struct Two;
 
-impl From<&str> for Race<Part1> {
+impl From<&str> for Race<One> {
     fn from(value: &str) -> Self {
         let (times, distances) = value.split_once("\n").unwrap();
         let (_, times) = times.split_once(':').unwrap();
@@ -26,12 +26,12 @@ impl From<&str> for Race<Part1> {
         Self {
             times,
             distances,
-            state: PhantomData::<Part1>,
+            state: PhantomData::<One>,
         }
     }
 }
 
-impl From<&str> for Race<Part2> {
+impl From<&str> for Race<Two> {
     fn from(value: &str) -> Self {
         let (times, distances) = value.split_once("\n").unwrap();
         let (_, times) = times.split_once(':').unwrap();
@@ -51,7 +51,7 @@ impl From<&str> for Race<Part2> {
         Self {
             times: vec![times],
             distances: vec![distances],
-            state: PhantomData::<Part2>,
+            state: PhantomData::<Two>,
         }
     }
 }
@@ -65,7 +65,7 @@ fn quadratic_equation(a: f64, b: f64, c: f64) -> (f64, f64) {
 }
 
 fn solve_math_two(data: &str) -> u64 {
-    let race: Race<Part2> = Race::from(data);
+    let race: Race<Two> = Race::from(data);
     race.times
         .iter()
         .zip(race.distances.iter())
@@ -77,7 +77,7 @@ fn solve_math_two(data: &str) -> u64 {
 }
 
 fn solve_math_one(data: &str) -> u64 {
-    let race: Race<Part1> = Race::from(data);
+    let race: Race<One> = Race::from(data);
     race.times
         .iter()
         .zip(race.distances.iter())
@@ -89,7 +89,7 @@ fn solve_math_one(data: &str) -> u64 {
 }
 
 fn solve_part_one(data: &str) -> u64 {
-    let race: Race<Part1> = Race::from(data);
+    let race: Race<One> = Race::from(data);
     race.times
         .iter()
         .zip(race.distances.iter())
@@ -103,7 +103,7 @@ fn solve_part_one(data: &str) -> u64 {
         .product::<usize>() as u64
 }
 fn solve_part_two(data: &str) -> u64 {
-    let race: Race<Part2> = Race::from(data);
+    let race: Race<Two> = Race::from(data);
     race.times
         .iter()
         .zip(race.distances.iter())
