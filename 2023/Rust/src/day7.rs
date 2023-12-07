@@ -4,6 +4,12 @@ struct One;
 struct Two;
 
 #[derive(Debug, PartialEq, PartialOrd, Ord, Eq)]
+struct RoundJokers<'a> {
+    hand: HandJokers<'a>,
+    bid: usize,
+}
+
+#[derive(Debug, PartialEq, PartialOrd, Ord, Eq)]
 struct Round<'a> {
     hand: Hand<'a>,
     bid: usize,
@@ -35,6 +41,10 @@ const LABELS: [char; 13] = [
     '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A',
 ];
 
+const LABELS_JOKERS: [char; 13] = [
+    'J', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'Q', 'K', 'A',
+];
+
 fn stronger(a: &str, b: &str) -> Option<Ordering> {
     for (first, second) in a.chars().zip(b.chars()) {
         let pos_first = LABELS.iter().position(|&x| x == first);
@@ -46,6 +56,22 @@ fn stronger(a: &str, b: &str) -> Option<Ordering> {
         }
     }
     Some(Ordering::Equal)
+}
+
+impl<'a> PartialEq for HandJokers<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        use HandJokers::*;
+        match (self, other) {
+            (FiveOfKind(a), FiveOfKind(b)) => a == b,
+            (FourOfKind(a), FourOfKind(b)) => a == b,
+            (FullHouse(a), FullHouse(b)) => a == b,
+            (ThreeOfKind(a), ThreeOfKind(b)) => a == b,
+            (TwoPair(a), TwoPair(b)) => a == b,
+            (OnePair(a), OnePair(b)) => a == b,
+            (HighCard(a), HighCard(b)) => a == b,
+            (_, _) => false,
+        }
+    }
 }
 
 impl<'a> PartialEq for Hand<'a> {
@@ -60,6 +86,36 @@ impl<'a> PartialEq for Hand<'a> {
             (OnePair(a), OnePair(b)) => a == b,
             (HighCard(a), HighCard(b)) => a == b,
             (_, _) => false,
+        }
+    }
+}
+
+impl<'a> PartialOrd for HandJokers<'a> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        use HandJokers::*;
+        match (self, other) {
+            (FiveOfKind(a), FiveOfKind(b)) => stronger(a, b),
+            (FiveOfKind(_), _) => Some(Ordering::Greater),
+            (_, FiveOfKind(_)) => Some(Ordering::Less),
+            (FourOfKind(a), FourOfKind(b)) => stronger(a, b),
+            (FourOfKind(_), _) => Some(Ordering::Greater),
+            (_, FourOfKind(_)) => Some(Ordering::Less),
+            (FullHouse(a), FullHouse(b)) => stronger(a, b),
+            (FullHouse(_), _) => Some(Ordering::Greater),
+            (_, FullHouse(_)) => Some(Ordering::Less),
+            (ThreeOfKind(a), ThreeOfKind(b)) => stronger(a, b),
+            (ThreeOfKind(_), _) => Some(Ordering::Greater),
+            (_, ThreeOfKind(_)) => Some(Ordering::Less),
+            (TwoPair(a), TwoPair(b)) => stronger(a, b),
+            (TwoPair(_), _) => Some(Ordering::Greater),
+            (_, TwoPair(_)) => Some(Ordering::Less),
+            (OnePair(a), OnePair(b)) => stronger(a, b),
+            (OnePair(_), _) => Some(Ordering::Greater),
+            (_, OnePair(_)) => Some(Ordering::Less),
+            (HighCard(a), HighCard(b)) => stronger(a, b),
+            (HighCard(_), _) => Some(Ordering::Greater),
+            (_, HighCard(_)) => Some(Ordering::Less),
+            (_, _) => None,
         }
     }
 }
@@ -94,6 +150,14 @@ impl<'a> PartialOrd for Hand<'a> {
     }
 }
 
+impl<'a> From<&'a str> for RoundJokers<'a> {
+    fn from(round: &'a str) -> Self {
+        let (hand, bid) = round.split_once(' ').unwrap();
+        let (hand, bid) = (HandJokers::from(hand), bid.parse::<usize>().unwrap());
+        Self { hand, bid }
+    }
+}
+
 impl<'a> From<&'a str> for Round<'a> {
     fn from(round: &'a str) -> Self {
         let (hand, bid) = round.split_once(' ').unwrap();
@@ -102,6 +166,73 @@ impl<'a> From<&'a str> for Round<'a> {
     }
 }
 
+impl<'a> From<&'a str> for HandJokers<'a> {
+    fn from(hand: &'a str) -> Self {
+        use HandJokers::*;
+        let mut frq: HashMap<char, usize> = HashMap::new();
+
+        for ch in hand.chars() {
+            frq.entry(ch).and_modify(|f| *f += 1).or_insert(1);
+        }
+
+        let jokers = frq.get(&'J');
+
+        let mut two_pairs = 0usize;
+        let mut three_pairs = 0usize;
+        let mut four_pairs = 0usize;
+        for (_, val) in frq.iter() {
+            match val {
+                3 => three_pairs += 1,
+                2 => two_pairs += 1,
+                4 => four_pairs += 1,
+                _ => {}
+            }
+        }
+
+        if let Some(&jokers) = jokers {
+            match jokers {
+                2 => two_pairs -= 1,
+                3 => three_pairs -= 1,
+                4 => four_pairs -= 1,
+                _ => {}
+            }
+            // println!("{hand:?}");
+            match (frq.len(), two_pairs, three_pairs, four_pairs, jokers) {
+                (1, _, _, _, _) => FiveOfKind(hand),
+                (_, _, _, 1, 1) => FiveOfKind(hand),
+                (_, 1, 0, _, 3) => FiveOfKind(hand),
+                (_, _, 1, _, 2) => FiveOfKind(hand),
+                (_, _, 1, _, 1) => FourOfKind(hand),
+                (_, 0, _, _, 4) => FourOfKind(hand),
+                (_, 1, 0, _, 2) => FourOfKind(hand),
+                (_, 2, 0, _, 1) => FullHouse(hand),
+                (_, 1, 0, _, 1) => ThreeOfKind(hand),
+                (_, 0, 0, _, 3) => ThreeOfKind(hand),
+                // A23AJ
+                // J23AJ
+                // 1234J
+                (4, _, _, _, 2) => ThreeOfKind(hand),
+                (5, _, _, _, 1) => OnePair(hand),
+                _ => {
+                    unreachable!()
+                }
+            }
+        } else {
+            match (frq.len(), two_pairs, three_pairs, four_pairs) {
+                (5, _, _, _) => HighCard(hand),
+                (4, _, _, _) => OnePair(hand),
+                (1, _, _, _) => FiveOfKind(hand),
+                (_, _, _, 1) => FourOfKind(hand),
+                (_, 0, 1, _) => ThreeOfKind(hand),
+                (_, 1, 1, _) => FullHouse(hand),
+                (_, 2, 0, _) => TwoPair(hand),
+                _ => {
+                    unreachable!()
+                }
+            }
+        }
+    }
+}
 impl<'a> From<&'a str> for Hand<'a> {
     fn from(hand: &'a str) -> Self {
         let mut frq: HashMap<char, usize> = HashMap::new();
@@ -150,14 +281,24 @@ fn solve_part_one(data: &str) -> u64 {
         .sum::<usize>() as u64
 }
 fn solve_part_two(data: &str) -> u64 {
-    todo!()
+    let mut rounds = data
+        .lines()
+        .map(|line| RoundJokers::from(line))
+        .collect::<Vec<_>>();
+    rounds.sort_by(|b, a| a.hand.partial_cmp(&b.hand).unwrap());
+    let n = rounds.len();
+    rounds
+        .iter()
+        .enumerate()
+        .map(|(i, round)| round.bid * (n - i))
+        .sum::<usize>() as u64
 }
 
 fn main() {
     let test = include_str!("../input/day7.test");
     let prod = include_str!("../input/day7.prod");
-    // println!("part_1 test: {:?}", solve_part_one(test));
+    println!("part_1 test: {:?}", solve_part_one(test));
     println!("part_1 prod {:?}", solve_part_one(prod));
-    // println!("part_2 test: {:?}", solve_part_two(test));
-    // println!("part_2 prod {:?}", solve_part_two(prod));
+    println!("part_2 test: {:?}", solve_part_two(test));
+    println!("part_2 prod {:?}", solve_part_two(prod));
 }
