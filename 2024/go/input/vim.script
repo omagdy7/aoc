@@ -1,0 +1,6 @@
+s/.\{-}mul(\(\d\+\),\(\d\+\))/\1*\2+/g
+normal! $F+D
+normal! V
+execute "w !wl-copy $(bc)"
+" call setline('.', eval(getline('.')))
+
