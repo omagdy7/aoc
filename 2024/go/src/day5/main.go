@@ -9,12 +9,12 @@ import (
 	"strings"
 )
 
-type Section struct {
+type SafetyManual struct {
 	pageOrderingRules [][2]int
 	updates           [][]int
 }
 
-func (s Section) String() string {
+func (s SafetyManual) String() string {
 	var builder strings.Builder
 
 	// Format pageOrderingRules
@@ -56,7 +56,7 @@ func FileRead(path string) string {
 
 }
 
-func parseInput(data string) Section {
+func parseInput(data string) SafetyManual {
 	section := strings.Split(data, "\n\n")
 	first_section := strings.Split(section[0], "\n")
 	second_section := strings.Split(section[1], "\n")
@@ -78,14 +78,14 @@ func parseInput(data string) Section {
 		}
 		updates = append(updates, update)
 	}
-	return Section{
+	return SafetyManual{
 		pageOrderingRules: pageOrderingRules,
 		updates:           updates,
 	}
 
 }
 
-func filter_relevant_rules(s *Section, update *[]int) [][2]int {
+func filter_relevant_rules(s *SafetyManual, update *[]int) [][2]int {
 	var filtered_rules [][2]int
 	for _, rule := range s.pageOrderingRules {
 		if slices.Contains(*update, rule[0]) && slices.Contains(*update, rule[1]) {
