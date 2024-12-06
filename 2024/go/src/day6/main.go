@@ -114,34 +114,32 @@ func solve_part_one(data string) int {
 	return trailCount
 }
 
-func isStuck(grid *Grid, gPos [2]int, trials int) bool {
-	cnt := 0
-	set := make(map[[2]int]struct{})
-	set[gPos] = struct{}{}
+func isStuck(grid *Grid, gPos [2]int) bool {
+	n, m := len(*grid), len((*grid)[0])
+	visited := make([]bool, n*m*4)
 	curOrientation := getOrientation((*grid)[gPos[0]][gPos[1]])
+	visited[((gPos[0]*n)+gPos[1])*4+curOrientation] = true
 	dx := [4]int{-1, 0, 1, 0} // Up, Right, Down, Left
 	dy := [4]int{0, 1, 0, -1}
-	for trials > 0 {
-		prevSize := len(set)
+	for {
 		nx := gPos[0] + dx[curOrientation]
 		ny := gPos[1] + dy[curOrientation]
 		if isValid(grid, nx, ny) {
 			curPoint := (*grid)[nx][ny]
 			if !isObstacle(curPoint) {
 				gPos = [2]int{nx, ny}
-				// replaceCharGrid(grid, nx, ny, 'X')
-				set[gPos] = struct{}{}
-				if prevSize == len(set) {
-					cnt++
+				if visited[((nx*n)+ny)*4+curOrientation] {
+					return true
 				}
+				visited[((nx*n)+ny)*4+curOrientation] = true
 			} else {
 				curOrientation = turn90(curOrientation)
 			}
+		} else {
+			break
 		}
-		trials--
 	}
-
-	return cnt >= len(set)
+	return false
 }
 
 func solve_part_two(data string) int {
