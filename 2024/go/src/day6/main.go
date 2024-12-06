@@ -156,12 +156,16 @@ func solve_part_two(data string) int {
 	ans := 0
 	for i := range n {
 		for j := range m {
-			gridCopy := make([]string, len(grid))
-			copy(gridCopy, grid)
+			// gridCopy := make([]string, len(grid))
+			// copy(gridCopy, grid)
 			if i != guardPosition[0] || j != guardPosition[1] {
-				replaceCharGrid(&gridCopy, i, j, '#')
-				if isStuck(&gridCopy, guardPosition, n*m) {
+				flag := grid[i][j] == '.'
+				replaceCharGrid(&grid, i, j, '#')
+				if isStuck(&grid, guardPosition) {
 					ans++
+				}
+				if flag {
+					replaceCharGrid(&grid, i, j, '.')
 				}
 			}
 		}
