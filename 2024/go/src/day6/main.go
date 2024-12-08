@@ -115,10 +115,17 @@ func solve_part_one(data string) int {
 }
 
 func isStuck(grid *Grid, gPos [2]int) bool {
-	n, m := len(*grid), len((*grid)[0])
-	visited := make([]bool, n*m*4)
+	// n, m := len(*grid), len((*grid)[0])
+	var visited [130][130][4]bool
+	// visited := make([][][]bool, 4)
+	// for i := range visited {
+	// 	visited[i] = make([][]bool, n)
+	// 	for j := range visited[i] {
+	// 		visited[i][j] = make([]bool, m)
+	// 	}
+	// }
 	curOrientation := getOrientation((*grid)[gPos[0]][gPos[1]])
-	visited[((gPos[0]*n)+gPos[1])*4+curOrientation] = true
+	visited[gPos[0]][gPos[1]][curOrientation] = true
 	dx := [4]int{-1, 0, 1, 0} // Up, Right, Down, Left
 	dy := [4]int{0, 1, 0, -1}
 	for {
@@ -128,10 +135,10 @@ func isStuck(grid *Grid, gPos [2]int) bool {
 			curPoint := (*grid)[nx][ny]
 			if !isObstacle(curPoint) {
 				gPos = [2]int{nx, ny}
-				if visited[((nx*n)+ny)*4+curOrientation] {
+				if visited[nx][ny][curOrientation] {
 					return true
 				}
-				visited[((nx*n)+ny)*4+curOrientation] = true
+				visited[nx][ny][curOrientation] = true
 			} else {
 				curOrientation = turn90(curOrientation)
 			}
@@ -156,9 +163,7 @@ func solve_part_two(data string) int {
 	ans := 0
 	for i := range n {
 		for j := range m {
-			// gridCopy := make([]string, len(grid))
-			// copy(gridCopy, grid)
-			if i != guardPosition[0] || j != guardPosition[1] {
+			if !(i == guardPosition[0] && j == guardPosition[1]) {
 				flag := grid[i][j] == '.'
 				replaceCharGrid(&grid, i, j, '#')
 				if isStuck(&grid, guardPosition) {

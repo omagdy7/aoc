@@ -19,11 +19,13 @@ func FileRead(path string) string {
 type Op = string
 
 const (
-	Plus Op = "+"
-	Mul  Op = "*"
+	Plus   Op = "+"
+	Mul    Op = "*"
+	Concat Op = "||"
 )
 
-var Ops = [2]Op{Plus, Mul}
+var OpsOne = []Op{Plus, Mul}
+var OpsTwo = []Op{Plus, Mul, Concat}
 
 type Calibration struct {
 	target int
@@ -31,8 +33,6 @@ type Calibration struct {
 }
 
 type Expression = []string
-
-// 81 + 57 * 52
 
 func (c Calibration) String() string {
 	valsStr := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(c.vals)), ", "), "[]")
@@ -64,7 +64,7 @@ func parseInput(data string) []Calibration {
 	return cals
 }
 
-func generatePossibleExpressions(opsLeft int, expr *Expression, expressions *[]Expression) {
+func generatePossibleExpressions(opsLeft int, expr *Expression, expressions *[]Expression, Ops []string) {
 	if opsLeft == 0 {
 		comb := make([]string, len(*expr))
 		copy(comb, *expr)
@@ -75,7 +75,7 @@ func generatePossibleExpressions(opsLeft int, expr *Expression, expressions *[]E
 			*expr = append(*expr, op)
 
 			// explore
-			generatePossibleExpressions(opsLeft-1, expr, expressions)
+			generatePossibleExpressions(opsLeft-1, expr, expressions, Ops)
 
 			// unchoose
 			*expr = (*expr)[:len(*expr)-1]
@@ -84,48 +84,107 @@ func generatePossibleExpressions(opsLeft int, expr *Expression, expressions *[]E
 
 }
 
-func eval(vals []int, expressions *[]Expression) int {
-	for i := len(*expressions) - 1; i >= 0; i-- {
-		for j, op := range (*expressions)[i] {
-			left := vals[j-1]
-			right := vals[j]
-			evaluation := 0
-			if op == Plus {
-				evaluation := left + right
-			} else if op == Mul {
-				evaluation := left * right
-			}
+func removeElement(s []int, i int) ([]int, error) {
+	if i >= len(s) || i < 0 {
+		return nil, fmt.Errorf("Index is out of range. Index is %d with slice length %d", i, len(s))
+	}
+	return append(s[:i], s[i+1:]...), nil
+}
+
+func removeElementString(s []string, i int) ([]string, error) {
+	if i >= len(s) || i < 0 {
+		return nil, fmt.Errorf("Index is out of range. Index is %d with slice length %d", i, len(s))
+	}
+	return append(s[:i], s[i+1:]...), nil
+}
+
+func evalPartOne(vals []int, expression *Expression) int {
+	for _, op := range *expression {
+		left := vals[0]
+		right := vals[1]
+		if op == Mul {
+			vals, _ = removeElement(vals, 0)
+			vals[0] = left * right
+		} else if op == Plus {
+			vals, _ = removeElement(vals, 0)
+			vals[0] = left + right
 		}
 	}
 
-	return 5
+	return vals[0]
 }
+func evalPartTwo(vals []int, expression *Expression) int {
+	for _, op := range *expression {
+		left := vals[0]
+		right := vals[1]
+		if op == Mul {
+			vals, _ = removeElement(vals, 0)
+			vals[0] = left * right
+		} else if op == Plus {
+			vals, _ = removeElement(vals, 0)
+			vals[0] = left + right
+		} else if op == "||" {
+			vals, _ = removeElement(vals, 0)
+			// vals[0], _ = strconv.Atoi(strconv.Itoa(left) + strconv.Itoa(right))
+			multiplier := 1
+			for temp := right; temp > 0; temp /= 10 {
+				multiplier *= 10
+			}
+			vals[0] = left*multiplier + right
+		}
+	}
 
-func solve_part_one(data string) int {
+	// fmt.Printf("expression: %v\n", (*expression))
+	// fmt.Printf("vals: %v\n", vals)
+
+	return vals[0]
+}
+func solve_part_one(data string) int64 {
 	calibrations := parseInput(data)
-	ans := 0
+	var ans int64 = 0
 	for _, calibration := range calibrations {
 		var expressions []Expression
-		generatePossibleExpressions((len(calibration.vals) - 1), &[]string{}, &expressions)
-		if eval(calibration.vals, &expressions) == calibration.target {
-			ans += calibration.target
+		generatePossibleExpressions((len(calibration.vals) - 1), &[]string{}, &expressions, OpsOne)
+		for _, expr := range expressions {
+			copy_vals := make([]int, len(calibration.vals))
+			copy(copy_vals, calibration.vals)
+			if evalPartOne(copy_vals, &expr) == calibration.target {
+				// fmt.Printf("expr: %v\n", expr)
+				ans += int64(calibration.target)
+				break
+			}
 		}
-		fmt.Printf("expressions: %v\n", expressions)
+		// fmt.Printf("expressions: %v\n", expressions)
 		expressions = []Expression{}
-
 	}
 	return ans
 }
 
-func solve_part_two(data string) int {
-	return 5
+func solve_part_two(data string) int64 {
+	calibrations := parseInput(data)
+	var ans int64 = 0
+	for _, calibration := range calibrations {
+		var expressions []Expression
+		generatePossibleExpressions((len(calibration.vals) - 1), &[]string{}, &expressions, OpsTwo)
+		for _, expr := range expressions {
+			copy_vals := make([]int, len(calibration.vals))
+			copy(copy_vals, calibration.vals)
+			if evalPartTwo(copy_vals, &expr) == calibration.target {
+				// fmt.Printf("expr: %v\n", expr)
+				ans += int64(calibration.target)
+				break
+			}
+		}
+		expressions = []Expression{}
+	}
+	return ans
 }
 
 func main() {
 	test := FileRead("../input/day7.test")
-	// prod := FileRead("../input/day7.prod")
+	prod := FileRead("../input/day7.prod")
 	fmt.Println("Part_1 test: ", solve_part_one(test))
-	// fmt.Println("Part_1 prod: ", solve_part_one(prod))
-	// fmt.Println("Part_2 test: ", solve_part_two(test))
-	// fmt.Println("Part_2 prod: ", solve_part_two(prod))
+	fmt.Println("Part_1 prod: ", solve_part_one(prod))
+	fmt.Println("Part_2 test: ", solve_part_two(test))
+	fmt.Println("Part_2 prod: ", solve_part_two(prod))
 }
