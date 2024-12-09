@@ -49,21 +49,17 @@ type Points = [][2]int
 
 func getPosMap(grid *Grid) map[rune]Points {
 	n, m := len(*grid), len((*grid)[0])
-	posMap := make(map[rune]Points)
+	antinodes := make(map[rune]Points)
 	for i := 0; i < n; i++ {
 		for j := 0; j < m; j++ {
 			curPos := Point{i, j}
 			curRune := (*grid)[i][j]
 			if curRune != '.' {
-				if _, exists := posMap[curRune]; exists {
-					posMap[curRune] = append(posMap[curRune], curPos)
-				} else {
-					posMap[curRune] = [][2]int{curPos}
-				}
+				antinodes[curRune] = append(antinodes[curRune], curPos)
 			}
 		}
 	}
-	return posMap
+	return antinodes
 }
 
 func isValidAntenna(grid *Grid, i, j int) bool {
@@ -76,9 +72,9 @@ func isValidAntenna(grid *Grid, i, j int) bool {
 
 func solve_part_one(data string) int {
 	grid := parseInput(data)
-	posMap := getPosMap(&grid)
-	set := make(map[Point]struct{})
-	for _, val := range posMap {
+	antennas := getPosMap(&grid)
+	antinodes := make(map[Point]struct{})
+	for _, val := range antennas {
 		for i := 0; i < len(val); i++ {
 			curPosI := val[i]
 			for j := i + 1; j < len(val); j++ {
@@ -88,22 +84,22 @@ func solve_part_one(data string) int {
 				firstAntennaPos := [2]int{curPosI[0] + diffOne[0], curPosI[1] + diffOne[1]}
 				secondAntennaPos := [2]int{curPosJ[0] + diffTwo[0], curPosJ[1] + diffTwo[1]}
 				if isValidAntenna(&grid, firstAntennaPos[0], firstAntennaPos[1]) {
-					set[firstAntennaPos] = struct{}{}
+					antinodes[firstAntennaPos] = struct{}{}
 				}
 				if isValidAntenna(&grid, secondAntennaPos[0], secondAntennaPos[1]) {
-					set[secondAntennaPos] = struct{}{}
+					antinodes[secondAntennaPos] = struct{}{}
 				}
 			}
 		}
 	}
-	return len(set)
+	return len(antinodes)
 }
 
 func solve_part_two(data string) int {
 	grid := parseInput(data)
-	posMap := getPosMap(&grid)
+	antennas := getPosMap(&grid)
 	cnt := 0
-	for _, val := range posMap {
+	for _, val := range antennas {
 		for i := 0; i < len(val); i++ {
 			curPosI := val[i]
 			for j := i + 1; j < len(val); j++ {
