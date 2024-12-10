@@ -95,9 +95,6 @@ type FileBlock struct {
 	space int
 }
 
-//        i = 1                                                                                                          j=12
-// [{0 2} {-1 3} {-1,1} {1 3} {-1 3} {2 1} {-1 3} {3 3} {-1 1} {4 2} {-1 1} {5 4} {-1 1} {6 4} {-1 1} {7 3} {-1 1} {8 4} {9 2}]
-
 func moveBlocksPartTwo(fileBlocks []FileBlock) []string {
 	for i := 0; i < len(fileBlocks); i++ {
 		if fileBlocks[i].id != -1 {
