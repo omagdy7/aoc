@@ -65,7 +65,7 @@ func solve_part_two(data string) int {
 func main() {
 	test_1, _ := os.ReadFile("../input/day1.test")
 	test_2, _ := os.ReadFile("../input/day1_2.test")
-	prod, _ := os.ReadFile("../input/day_1.prod")
+	prod, _ := os.ReadFile("../input/day01.prod")
 	content_test_1 := string(test_1)
 	content_test_2 := string(test_2)
 	content_prod := string(prod)

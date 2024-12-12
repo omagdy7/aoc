@@ -160,8 +160,8 @@ func solve_part_two(data string) int64 {
 }
 
 func main() {
-	test := FileRead("../input/day9.test")
-	prod := FileRead("../input/day9.prod")
+	test := FileRead("../input/day09.test")
+	prod := FileRead("../input/day09.prod")
 	fmt.Println("Part_1 test: ", solve_part_one(test))
 	fmt.Println("Part_1 prod: ", solve_part_one(prod))
 	fmt.Println("Part_2 test: ", solve_part_two(test))

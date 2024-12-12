@@ -63,9 +63,9 @@ func solve_part_two(data string) int {
 }
 
 func main() {
-	test := FileRead("../input/day3.test")
-	test_2 := FileRead("../input/day3_2.test")
-	prod := FileRead("../input/day3.prod")
+	test := FileRead("../input/day03.test")
+	test_2 := FileRead("../input/day03_2.test")
+	prod := FileRead("../input/day03.prod")
 	// Define the regex pattern with capture groups
 
 	fmt.Println("Part_1 test: ", solve_part_one(test))
