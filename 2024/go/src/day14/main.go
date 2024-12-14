@@ -57,11 +57,11 @@ func mod(a, b int) int {
 
 func printGrid(grid [][]int) {
 	for _, row := range grid {
-		for i, cell := range row {
-			if i != len(row)-1 {
-				fmt.Printf("%d,", cell)
+		for _, cell := range row {
+			if cell == 0 {
+				fmt.Printf(" ")
 			} else {
-				fmt.Printf("%d", cell)
+				fmt.Printf("#")
 			}
 		}
 		fmt.Println()
@@ -97,6 +97,7 @@ func plotNewMap(grid Grid, robots []Robot, height, width, seconds int) Grid {
 func countQuadrants(grid Grid) int64 {
 	w, h := len(grid), len(grid[0])
 	quadrants := [4]int{0, 0, 0, 0}
+
 	for i := 0; i < w; i++ {
 		if i == w/2 {
 			continue
@@ -135,27 +136,38 @@ func solve_part_one(data string) int64 {
 	return ans
 }
 
-func solve_part_two(data string) int64 {
-	robots := parseInput(data)
-	// oldMap := plotMap(robots, 11, 7)
-	// newMap := plotNewMap(oldMap, robots, 11, 7, 100)
-	oldMap := plotMap(robots, 101, 103)
-	// newMap := plotNewMap(oldMap, robots, 101, 103, 100)
-	for i := 1; i <= 100; i++ {
-		newMap := plotNewMap(oldMap, robots, 101, 103, i)
-		printGrid(newMap)
-		fmt.Println()
+func containsOverLaps(plotMap Grid) bool {
+	for i := 0; i < len(plotMap); i++ {
+		for j := 0; j < len(plotMap[0]); j++ {
+			if plotMap[i][j] > 1 {
+				return true
+			}
+		}
 	}
-	// ans := countQuadrants(newMap)
-	return 42
-
+	return false
 }
 
+func solve_part_two(data string) {
+	robots := parseInput(data)
+	oldMap := plotMap(robots, 101, 103)
+	for steps := 1; steps <= 15000; steps++ {
+		copiedMap := make([][]int, len(oldMap))
+		for j := range oldMap {
+			copiedMap[j] = make([]int, len(oldMap[j]))
+			copy(copiedMap[j], oldMap[j])
+		}
+		newMap := plotNewMap(copiedMap, robots, 101, 103, steps)
+		if !containsOverLaps(newMap) {
+			printGrid(newMap)
+			fmt.Println(steps)
+		}
+	}
+}
 func main() {
 	// test := FileRead("../input/day14.test")
 	prod := FileRead("../input/day14.prod")
 	// fmt.Println("Part_1 test: ", solve_part_one(test))
 	// fmt.Println("Part_1 prod: ", solve_part_one(prod))
 	// fmt.Println("Part_2 test: ", solve_part_two(test))
-	fmt.Println("Part_2 prod: ", solve_part_two(prod))
+	solve_part_two(prod)
 }
