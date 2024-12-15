@@ -1,5 +1,6 @@
 *.o
 **/target
 /2021
+*.prod
 **/.vscode
 
