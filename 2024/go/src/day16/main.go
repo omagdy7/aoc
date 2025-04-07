@@ -111,32 +111,25 @@ func findPosition(grid [][]byte, target byte) (Point, bool) {
 	return Point{}, false
 }
 
-func dijkstra(grid [][]byte) (int, int) { // Returns cost and step count
-	start, found := findPosition(grid, 'E')
-	if !found {
-		return -1, -1 // 'E' not found
+func dijkstra(grid [][]byte, start Point, end Point) (int, int, []Point) { // Returns cost, step count, and path
+	if start == end {
+		return 0, 0, []Point{start}
 	}
-
-	if grid[start.x][start.y] == 'S' {
-		return 0, 0 // Start is the end
-	}
-
 	var directions = [4]Direction{
 		{1, 0},  // Down
 		{0, 1},  // Right
 		{-1, 0}, // Up
 		{0, -1}, // Left
 	}
-
 	pq := &PriorityQueue{}
 	heap.Init(pq)
-
 	type Key struct {
 		x, y, dx, dy int
 	}
-
 	minCost := make(map[Key]int)
 	stepCounts := make(map[Key]int)
+	prev := make(map[Key]Key)          // Track previous position for path reconstruction
+	prevDir := make(map[Key]Direction) // Track previous direction
 
 	heap.Push(pq, &State{cost: 0, stepCount: 0, pos: start, dir: Direction{0, 0}})
 
@@ -146,17 +139,27 @@ func dijkstra(grid [][]byte) (int, int) { // Returns cost and step count
 		stepCount := current.stepCount
 		pos := current.pos
 		dir := current.dir
-
 		key := Key{pos.x, pos.y, dir.dx, dir.dy}
 
 		if existingCost, exists := minCost[key]; exists && cost >= existingCost {
 			continue
 		}
+
 		minCost[key] = cost
 		stepCounts[key] = stepCount
 
-		if grid[pos.x][pos.y] == 'S' {
-			return cost, stepCount
+		if pos == end {
+			// Reconstruct path
+			path := []Point{end}
+			currentKey := key
+
+			for currentKey.x != start.x || currentKey.y != start.y {
+				previousKey := prev[currentKey]
+				path = append([]Point{{previousKey.x, previousKey.y}}, path...)
+				currentKey = previousKey
+			}
+
+			return cost, stepCount, path
 		}
 
 		for _, d := range directions {
@@ -169,29 +172,64 @@ func dijkstra(grid [][]byte) (int, int) { // Returns cost and step count
 					newCost = cost + 1001
 				}
 				newStepCount := stepCount + 1
-
 				newKey := Key{nx, ny, d.dx, d.dy}
 
 				if existingCost, exists := minCost[newKey]; !exists || newCost < existingCost {
 					heap.Push(pq, &State{cost: newCost, stepCount: newStepCount, pos: Point{nx, ny}, dir: d})
+					prev[newKey] = key    // Store the previous position
+					prevDir[newKey] = dir // Store the previous direction
 				}
 			}
 		}
 	}
 
-	return -1, -1 // 'S' is not reachable
+	return 0, 0, nil // 'S' is not reachable
 }
 
 func solve_part_one(data string) int {
 	maze := parseInput(data)
-	cost, _ := dijkstra(maze)
+	start, _ := findPosition(maze, 'E')
+	end, _ := findPosition(maze, 'S')
+	cost, _, _ := dijkstra(maze, start, end)
 	return cost
 }
 
 func solve_part_two(data string) int {
 	maze := parseInput(data)
-	_, lenPath := dijkstra(maze)
-	return lenPath
+	start, _ := findPosition(maze, 'E')
+	end, _ := findPosition(maze, 'S')
+	bestCost, _, path := dijkstra(maze, start, end)
+	uniquePoints := make(map[Point]struct{})
+	for _, p := range path {
+		uniquePoints[p] = struct{}{}
+	}
+
+	fmt.Println(bestCost)
+
+	for i := range maze {
+		for j := range maze[i] {
+			currentPoint := Point{i, j}
+			_, exists := uniquePoints[currentPoint]
+			if exists {
+				continue
+			}
+			costCurToStart, _, pathStart := dijkstra(maze, start, currentPoint)
+			costCurToEnd, _, pathEnd := dijkstra(maze, currentPoint, end)
+			if costCurToStart+costCurToEnd+1000 == bestCost || costCurToStart+costCurToEnd == bestCost {
+				for _, p := range pathStart {
+					uniquePoints[p] = struct{}{}
+				}
+				for _, p := range pathEnd {
+					uniquePoints[p] = struct{}{}
+				}
+				// fmt.Println(costCurToStart, costCurToEnd)
+				uniquePoints[currentPoint] = struct{}{}
+				maze[currentPoint.x][currentPoint.y] = 'O'
+			}
+		}
+	}
+	// printGrid(maze)
+	return len(uniquePoints)
 }
 
 func main() {
@@ -201,5 +239,5 @@ func main() {
 	fmt.Println("Part_1 test: ", solve_part_one(test))
 	fmt.Println("Part_1 prod: ", solve_part_one(prod))
 	fmt.Println("Part_2 test: ", solve_part_two(test))
-	// fmt.Println("Part_2 prod: ", solve_part_two(prod))
+	fmt.Println("Part_2 prod: ", solve_part_two(prod))
 }
