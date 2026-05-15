@@ -62,6 +62,6 @@ fn main() {
     let prod = include_str!("../input/day_1.prod");
     println!("part_1 test: {:?}", solve_part_one(test_1));
     println!("part_1 prod: {:?}", solve_part_one(prod));
-    println!("part_2 test: {:?}", solve_part_two(test_1));
+    println!("part_2 test: {:?}", solve_part_two(test_1))
     println!("part_2 prod: {:?}", solve_part_two(prod));
 }
