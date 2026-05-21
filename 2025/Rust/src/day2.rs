@@ -1,5 +1,3 @@
-use std::vec;
-
 struct Identifiers {
     ids: Vec<(usize, usize)>,
 }
