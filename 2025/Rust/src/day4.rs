@@ -1,7 +1,5 @@
 fn parse_input(data: &str) -> Vec<Vec<char>> {
-    data.lines()
-        .map(|line| line.chars().collect::<Vec<char>>())
-        .collect()
+    data.lines().map(|line| line.chars().collect()).collect()
 }
 
 fn is_valid(i: i32, j: i32, n: i32, m: i32) -> bool {
