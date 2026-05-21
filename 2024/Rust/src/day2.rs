@@ -38,7 +38,7 @@ fn is_safe(report: &Vec<i32>) -> bool {
 }
 
 fn solve_part_one(data: &str) -> usize {
-    let reports = parse_input(data);
+    let reports = parse_input(data)
     reports.iter().filter(|&report| is_safe(report)).count()
 }
 
