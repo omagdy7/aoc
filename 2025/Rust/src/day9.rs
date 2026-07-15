@@ -55,6 +55,7 @@ fn rect_is_valid(points: &[Point2D], xlo: i64, xhi: i64, ylo: i64, yhi: i64) -> 
 
 fn point_in_or_on_polygon(pts: &[Point2D], px: f64, py: f64) -> bool {
     let n = pts.len();
+    // boundary check first (covers thin rectangles exactly)
     for i in 0..n {
         let a = pts[i];
         let b = pts[(i + 1) % n];
